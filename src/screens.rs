@@ -8,7 +8,7 @@ pub enum UCPFlow {
     SelectInstitution,
     EnterCredentials,
     // ConnectingBank,
-    // VerifyIdentityCaptcha,
+    VerifyIdentityCaptcha,
     // VerifyIdentityColor,
     // VerifyIdentityCode,
     // VerifyIdentityToken,
@@ -20,7 +20,7 @@ impl AppFlow for UCPFlow {
             UCPFlow::SelectInstitution => Box::new(SelectInstitution::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::EnterCredentials => Box::new(EnterCredentials::new(ctx)) as Box<dyn AppPage>,
             // UCPFlow::ConnectingBank => Box::new(ConnectingBank::new(ctx)) as Box<dyn AppPage>,
-            // UCPFlow::VerifyIdentityCaptcha => Box::new(VerifyIdentityCaptcha::new(ctx)) as Box<dyn AppPage>,
+            UCPFlow::VerifyIdentityCaptcha => Box::new(VerifyIdentityCaptcha::new(ctx)) as Box<dyn AppPage>,
             // UCPFlow::VerifyIdentityColor => Box::new(VerifyIdentityCode::new(ctx)) as Box<dyn AppPage>,
             // UCPFlow::VerifyIdentityPhoneNumber => Box::new(VerifyIdentityPhoneNumber::new(ctx)) as Box<dyn AppPage>,
             // UCPFlow::VerifyIdentityToken => Box::new(VerifyIdentityToken::new(ctx)) as Box<dyn AppPage>,
@@ -70,7 +70,32 @@ impl EnterCredentials {
         let header = Header::stack(ctx, Some(back), "Enter credentials", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(user_id), Box::new(password)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context| println!("NEXT!") /*BitcoinFlow::Success.navigate(ctx)*/));
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx)));
         EnterCredentials(Stack::center(), Page::new(header, content, Some(bumper), false))
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct VerifyIdentityCaptcha(Stack, Page);
+impl AppPage for VerifyIdentityCaptcha {}
+impl OnEvent for VerifyIdentityCaptcha {}
+impl VerifyIdentityCaptcha {
+    pub fn new(ctx: &mut Context) -> Self {
+        let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
+        let user_id = TextInput::new(ctx, None, Some("User ID"), "User ID...", None, icon_button);
+        let password = TextInput::new(ctx, None, Some("Password"), "Password...", None, icon_button);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::SelectInstitution.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Enter credentials", None);
+        
+        let content = Content::new(Offset::Start, vec![Box::new(user_id), Box::new(password)]);
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
+            // println!("NEXT!")
+            let request = ctx.get::<UCPPlugin>().get_captcha();
+
+            println!("body = {:?}", request);
+        }
+         /*BitcoinFlow::Success.navigate(ctx)*/));
+        VerifyIdentityCaptcha(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }

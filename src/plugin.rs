@@ -7,6 +7,7 @@ use image::{load_from_memory, RgbaImage};
 
 pub struct UCPPlugin {
     banks: Arc<Mutex<BankInstitutions>>,
+    captcha: Arc<Mutex<String>>,
 }
 
 impl UCPPlugin {
@@ -16,6 +17,10 @@ impl UCPPlugin {
 
     pub fn get_banks(&mut self) -> Vec<(&'static str, &'static str, RgbaImage)> {
         self.banks.lock().unwrap().0.clone()
+    }
+
+    pub fn get_captcha(&mut self) -> String {
+       self.captcha.lock().unwrap().clone()
     }
 }
 
@@ -45,7 +50,15 @@ impl Plugin for UCPPlugin {
             banks.push((name, link, img))
         }
         let banks = Arc::new(Mutex::new(BankInstitutions(banks)));
-        (UCPPlugin{ banks: banks.clone() }, tasks![BankSync(banks)])
+
+        let captcha = reqwest::get("https://sophtron.com/../serviceClients/sophtronClient/v2")
+                .await.expect("Couldn't get request")
+                .text()
+                .await.expect("Couldn't get text");
+
+        let captcha = Arc::new(Mutex::new(captcha));
+
+        (UCPPlugin{ banks: banks.clone(), captcha }, tasks![BankSync(banks)])
     }
 }
 
