@@ -8,6 +8,7 @@ use image::{load_from_memory, RgbaImage};
 pub struct UCPPlugin {
     banks: Arc<Mutex<BankInstitutions>>,
     captcha: Arc<Mutex<String>>,
+    my_bank: Arc<Mutex<Option<(&'static str, &'static str, RgbaImage)>>>,
 }
 
 impl UCPPlugin {
@@ -20,7 +21,15 @@ impl UCPPlugin {
     }
 
     pub fn get_captcha(&mut self) -> String {
-       self.captcha.lock().unwrap().clone()
+        self.captcha.lock().unwrap().clone()
+    }
+
+    pub fn set_bank(&mut self, bank: (&'static str, &'static str, RgbaImage)) {
+        *self.my_bank.lock().unwrap() = Some(bank)
+    }
+
+    pub fn my_bank(&mut self) -> (&'static str, &'static str, RgbaImage) {
+        self.my_bank.lock().unwrap().as_mut().unwrap().clone()
     }
 }
 
@@ -57,8 +66,8 @@ impl Plugin for UCPPlugin {
                 .await.expect("Couldn't get text");
 
         let captcha = Arc::new(Mutex::new(captcha));
-
-        (UCPPlugin{ banks: banks.clone(), captcha }, tasks![BankSync(banks)])
+        let my_bank = Arc::new(Mutex::new(None));
+        (UCPPlugin{ banks: banks.clone(), captcha, my_bank }, tasks![BankSync(banks)])
     }
 }
 
@@ -68,6 +77,7 @@ impl Task for BankSync {
     fn interval(&self) -> Option<Duration> {Some(Duration::from_secs(10))}
 
     async fn run(&mut self, _h_ctx: &mut HeadlessContext) {
+        
         let test_banks = vec![
             ("Sophtron Bank", "https://sophtron.com", "https://sophtron.com/Images/logo.png"),
             ("MX Bank", "https://mx.com", "https://content.moneydesktop.com/storage/MD_Assets/Ipad%20Logos/100x100/INS-68e96dd6-eabd-42d3-9f05-416897f0746c_100x100.png"),
@@ -87,3 +97,32 @@ impl Task for BankSync {
         *self.0.lock().unwrap() = BankInstitutions(banks);
     }
 }
+
+// loadPopularInstitutions(query) {
+//     const url =
+//       typeof query === 'undefined'
+//         ? `${ApiEndpoints.INSTITUTIONS}/favorite`
+//         : `${ApiEndpoints.INSTITUTIONS}/favorite${FireflyAPI.buildQueryString(query)}`
+
+//     return axiosInstance.get(url).then(response => {
+//       return response.data
+//     })
+//   },
+
+//   buildQueryString(queryObj) {
+//     return _reduce(
+//       queryObj,
+//       (queryStr, value, queryName) => {
+//         const queryParam = FireflyAPI.buildQueryParameter(queryName, value)
+
+//         return queryStr === '' ? `?${queryParam}` : `${queryStr}&${queryParam}`
+//       },
+//       '',
+//     )
+//   },
+
+//   buildQueryParameter(key, value) {
+//     return _isArray(value)
+//       ? value.map(val => `${key}[]=${encodeURIComponent(val)}`).join('&')
+//       : `${key}=${encodeURIComponent(value)}`
+//   },

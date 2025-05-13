@@ -24,12 +24,24 @@ impl App for MyApp {
     }
 
     async fn new(ctx: &mut Context) -> Box<dyn Drawable> {
+        ctx.include_assets(include_assets!("./assets"));
+
         ctx.get::<PelicanUI>().theme = Theme::new(
             ColorResources::new(
-                BackgroundColor::default(),
-                OutlineColor::default(),
+                BackgroundColor {
+                    primary: Color::from_hex("ffffff", 255),
+                    secondary: Color::from_hex("e9eff5", 255)
+                },
+                OutlineColor {
+                    primary: Color::from_hex("c9d6e3", 255),
+                    secondary: Color::from_hex("e3eaf1", 255)
+                },
                 StatusColor::default(),
-                TextColor::default(),
+                TextColor {
+                    heading: Color::from_hex("1a2e45", 255),
+                    primary: Color::from_hex("2f3e51", 255),
+                    secondary: Color::from_hex("6b7c93", 255)
+                },
                 BrandColor {
                     primary: Color::from_hex("0c95df", 255),
                     secondary: Color::from_hex("ffffff", 255)
@@ -64,54 +76,54 @@ impl App for MyApp {
         
                     secondary_default: ButtonColorScheme {
                         background: Color::from_hex("000000", 0),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("585250", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("c9d6e3", 255),
                     },
                     secondary_disabled: ButtonColorScheme {
                         background: Color::from_hex("78716c", 255),
-                        label: Color::from_hex("000000", 255),
-                        outline:Color::from_hex("585250", 255),
+                        label: Color::from_hex("e9eff5", 255),
+                        outline:Color::from_hex("c9d6e3", 255),
                     },
                     secondary_hover: ButtonColorScheme {
                         background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("585250", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("c9d6e3", 255),
                     },
                     secondary_selected: ButtonColorScheme {
                         background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("585250", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("c9d6e3", 255),
                     },
                     secondary_pressed: ButtonColorScheme {
                         background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("585250", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("c9d6e3", 255),
                     },
         
                     ghost_default: ButtonColorScheme {
-                        background: Color::from_hex("000000", 0),
-                        label: Color::from_hex("ffffff", 255),
+                        background: Color::from_hex("ffffff", 0),
+                        label: Color::from_hex("000000", 255),
                         outline: Color::from_hex("000000", 0),
                     },
                     ghost_disabled: ButtonColorScheme {
-                        background: Color::from_hex("000000", 0),
+                        background: Color::from_hex("ffffff", 0),
                         label: Color::from_hex("78716c", 255),
                         outline: Color::from_hex("000000", 0),
                     },
                     ghost_hover: ButtonColorScheme {
-                        background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("000000", 0),
+                        background: Color::from_hex("e3eaf1", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("e3eaf1", 0),
                     },
                     ghost_selected: ButtonColorScheme {
-                        background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("000000", 0),
+                        background: Color::from_hex("e3eaf1", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("e3eaf1", 0),
                     },
                     ghost_pressed: ButtonColorScheme {
-                        background: Color::from_hex("262322", 255),
-                        label: Color::from_hex("ffffff", 255),
-                        outline: Color::from_hex("000000", 0),
+                        background: Color::from_hex("e3eaf1", 255),
+                        label: Color::from_hex("000000", 255),
+                        outline: Color::from_hex("e3eaf1", 0),
                     },
                 }
             ),

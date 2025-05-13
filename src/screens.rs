@@ -1,6 +1,7 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
 // use pelican_ui::prelude::Text;
+use image::{load_from_memory, RgbaImage};
 use crate::UCPPlugin;
 
 #[derive(Debug, Copy, Clone)]
@@ -9,9 +10,9 @@ pub enum UCPFlow {
     EnterCredentials,
     // ConnectingBank,
     VerifyIdentityCaptcha,
-    // VerifyIdentityColor,
-    // VerifyIdentityCode,
-    // VerifyIdentityToken,
+    VerifyIdentityColor,
+    VerifyIdentityPhoneNumber,
+    VerifyIdentityToken,
 }
 
 impl AppFlow for UCPFlow {
@@ -21,9 +22,9 @@ impl AppFlow for UCPFlow {
             UCPFlow::EnterCredentials => Box::new(EnterCredentials::new(ctx)) as Box<dyn AppPage>,
             // UCPFlow::ConnectingBank => Box::new(ConnectingBank::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityCaptcha => Box::new(VerifyIdentityCaptcha::new(ctx)) as Box<dyn AppPage>,
-            // UCPFlow::VerifyIdentityColor => Box::new(VerifyIdentityCode::new(ctx)) as Box<dyn AppPage>,
-            // UCPFlow::VerifyIdentityPhoneNumber => Box::new(VerifyIdentityPhoneNumber::new(ctx)) as Box<dyn AppPage>,
-            // UCPFlow::VerifyIdentityToken => Box::new(VerifyIdentityToken::new(ctx)) as Box<dyn AppPage>,
+            UCPFlow::VerifyIdentityColor => Box::new(VerifyIdentityColor::new(ctx)) as Box<dyn AppPage>,
+            UCPFlow::VerifyIdentityPhoneNumber => Box::new(VerifyIdentityPhoneNumber::new(ctx)) as Box<dyn AppPage>,
+            UCPFlow::VerifyIdentityToken => Box::new(VerifyIdentityToken::new(ctx)) as Box<dyn AppPage>,
         }
     }
 }
@@ -40,16 +41,7 @@ impl SelectInstitution {
 
         let banks = ctx.get::<UCPPlugin>().get_banks();
 
-        let banks = ListItemGroup::new(
-            banks.into_iter().map(|(name, url, image)| {
-                let img = ctx.add_image(image);
-                let avatar = AvatarContent::Image(img);
-                ListItem::new(
-                    ctx, true, name, None, Some(url), None, None, None, None, Some(avatar), None, 
-                    move |ctx: &mut Context| UCPFlow::EnterCredentials.navigate(ctx)
-                )
-            }).collect()
-        );
+        let banks = ListItemGroup::new(banks.into_iter().map(|(name, url, image)| bank_item(ctx, name, url, image.clone())).collect());
         
         let content = Content::new(Offset::Start, vec![Box::new(searchbar), Box::new(banks)]);
         SelectInstitution(Stack::center(), Page::new(header, content, None, false))
@@ -66,10 +58,13 @@ impl EnterCredentials {
         let user_id = TextInput::new(ctx, None, Some("User ID"), "User ID...", None, icon_button);
         let password = TextInput::new(ctx, None, Some("Password"), "Password...", None, icon_button);
 
+        let (name, url, image) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, image);
+
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::SelectInstitution.navigate(ctx));
         let header = Header::stack(ctx, Some(back), "Enter credentials", None);
         
-        let content = Content::new(Offset::Start, vec![Box::new(user_id), Box::new(password)]);
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(user_id), Box::new(password)]);
         let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx)));
         EnterCredentials(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
@@ -82,20 +77,121 @@ impl OnEvent for VerifyIdentityCaptcha {}
 impl VerifyIdentityCaptcha {
     pub fn new(ctx: &mut Context) -> Self {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
-        let user_id = TextInput::new(ctx, None, Some("User ID"), "User ID...", None, icon_button);
-        let password = TextInput::new(ctx, None, Some("Password"), "Password...", None, icon_button);
+        let captcha = TextInput::new(ctx, None, Some("Captcha code"), "Please enter the Captcha code...", None, icon_button);
 
-        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::SelectInstitution.navigate(ctx));
-        let header = Header::stack(ctx, Some(back), "Enter credentials", None);
+        let bytes = &ctx.load_file("captcha.png").unwrap();
+        let img = image::load_from_memory(&bytes).unwrap();
+        let image = Image{shape: ShapeType::Rectangle(0.0, (140.0, 50.0)), image: ctx.add_image(img.into()), color: None};
+
+        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, i);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::EnterCredentials.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Verify identity", None);
         
-        let content = Content::new(Offset::Start, vec![Box::new(user_id), Box::new(password)]);
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(image), Box::new(captcha)]);
         let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            // println!("NEXT!")
-            let request = ctx.get::<UCPPlugin>().get_captcha();
-
-            println!("body = {:?}", request);
-        }
-         /*BitcoinFlow::Success.navigate(ctx)*/));
+            UCPFlow::VerifyIdentityColor.navigate(ctx)
+            // let request = ctx.get::<UCPPlugin>().get_captcha();
+            // println!("body = {:?}", request);
+        }));
         VerifyIdentityCaptcha(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
+}
+
+#[derive(Debug, Component)]
+pub struct VerifyIdentityColor(Stack, Page);
+impl AppPage for VerifyIdentityColor {}
+impl OnEvent for VerifyIdentityColor {}
+impl VerifyIdentityColor {
+    pub fn new(ctx: &mut Context) -> Self {
+        let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
+        let color = TextInput::new(ctx, None, Some("Your favorite color"), "Please enter your favorite color...", None, icon_button);
+
+        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, i);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Verify identity", None);
+        
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(color)]);
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
+            UCPFlow::VerifyIdentityPhoneNumber.navigate(ctx)
+        }));
+        VerifyIdentityColor(Stack::center(), Page::new(header, content, Some(bumper), false))
+    }
+}
+
+// Please select a channal to receive your secure code
+
+#[derive(Debug, Component)]
+pub struct VerifyIdentityPhoneNumber(Stack, Page);
+impl AppPage for VerifyIdentityPhoneNumber {}
+impl OnEvent for VerifyIdentityPhoneNumber {}
+impl VerifyIdentityPhoneNumber {
+    pub fn new(ctx: &mut Context) -> Self {
+        let selector = ListItemSelector::new(ctx,
+            ("xxx-xxx-1234", "Verification code will be sent here", None),
+            ("xxx-xxx-8632", "Verification code will be sent here", None),
+            None, None
+        );       
+        
+        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, i);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityColor.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Verify identity", None);
+        
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(selector)]);
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
+            UCPFlow::VerifyIdentityToken.navigate(ctx)
+            // let request = ctx.get::<UCPPlugin>().get_captcha();
+            // println!("body = {:?}", request);
+        }));
+        VerifyIdentityPhoneNumber(Stack::center(), Page::new(header, content, Some(bumper), false))
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct VerifyIdentityToken(Stack, Page);
+impl AppPage for VerifyIdentityToken {}
+impl OnEvent for VerifyIdentityToken {}
+impl VerifyIdentityToken {
+    pub fn new(ctx: &mut Context) -> Self {
+        let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
+        let color = TextInput::new(ctx, None, Some("Enter the token"), "Please enter the token...", None, icon_button);
+
+        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, i);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityPhoneNumber.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Verify identity", None);
+        
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(color)]);
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
+            UCPFlow::SelectInstitution.navigate(ctx)
+        }));
+        VerifyIdentityToken(Stack::center(), Page::new(header, content, Some(bumper), false))
+    }
+}
+
+pub fn bank_item(ctx: &mut Context, name: &'static str, url: &'static str, image: RgbaImage) -> ListItem {
+    let img = ctx.add_image(image.clone());
+    let avatar = AvatarContent::Image(img);
+    ListItem::new(
+        ctx, true, name, None, Some(url), None, None, None, None, Some(avatar), None, 
+        move |ctx: &mut Context| { 
+            ctx.get::<UCPPlugin>().set_bank((name, url, image.clone()));
+            UCPFlow::EnterCredentials.navigate(ctx)
+        }
+    )
+}
+
+pub fn my_bank_item(ctx: &mut Context, name: &'static str, url: &'static str, image: RgbaImage) -> ListItem {
+    let img = ctx.add_image(image.clone());
+    let avatar = AvatarContent::Image(img);
+    ListItem::new(
+        ctx, false, name, None, Some(url), None, None, None, None, Some(avatar), None, 
+        move |ctx: &mut Context| {}
+    )
 }
