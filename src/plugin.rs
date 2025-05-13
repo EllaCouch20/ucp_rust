@@ -12,7 +12,7 @@ pub struct UCPPlugin {
 }
 
 impl UCPPlugin {
-    pub async fn _init(&mut self) {//Include theme
+    pub async fn _init(&mut self) {
         println!("Initialized UCPPlugin");
     }
 
@@ -97,6 +97,8 @@ impl Task for BankSync {
         *self.0.lock().unwrap() = BankInstitutions(banks);
     }
 }
+
+// let ApiEndpoints.INSTITUTIONS = './institutions'
 
 // loadPopularInstitutions(query) {
 //     const url =

@@ -1,8 +1,9 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
-// use pelican_ui::prelude::Text;
+use pelican_ui::prelude::Text;
 use image::{load_from_memory, RgbaImage};
 use crate::UCPPlugin;
+use crate::components::*;
 
 #[derive(Debug, Copy, Clone)]
 pub enum UCPFlow {
@@ -13,6 +14,7 @@ pub enum UCPFlow {
     VerifyIdentityColor,
     VerifyIdentityPhoneNumber,
     VerifyIdentityToken,
+    VerifyIdentityImages,
 }
 
 impl AppFlow for UCPFlow {
@@ -25,6 +27,7 @@ impl AppFlow for UCPFlow {
             UCPFlow::VerifyIdentityColor => Box::new(VerifyIdentityColor::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityPhoneNumber => Box::new(VerifyIdentityPhoneNumber::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityToken => Box::new(VerifyIdentityToken::new(ctx)) as Box<dyn AppPage>,
+            UCPFlow::VerifyIdentityImages => Box::new(VerifyIdentityImages::new(ctx)) as Box<dyn AppPage>,
         }
     }
 }
@@ -169,9 +172,39 @@ impl VerifyIdentityToken {
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(color)]);
         let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::SelectInstitution.navigate(ctx)
+            UCPFlow::VerifyIdentityImages.navigate(ctx)
         }));
         VerifyIdentityToken(Stack::center(), Page::new(header, content, Some(bumper), false))
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct VerifyIdentityImages(Stack, Page);
+impl AppPage for VerifyIdentityImages {}
+impl OnEvent for VerifyIdentityImages {}
+impl VerifyIdentityImages {
+    pub fn new(ctx: &mut Context) -> Self {
+
+        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let my_bank = my_bank_item(ctx, name, url, i);
+
+        let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityToken.navigate(ctx));
+        let header = Header::stack(ctx, Some(back), "Verify identity", None);
+
+        let text_size = ctx.get::<PelicanUI>().theme.fonts.size.md;
+        let instructions = Text::new(ctx, "Choose your saved image.", TextStyle::Primary, text_size, Align::Left);
+
+        let verify_images = verify_images(ctx, vec!["image1.jpeg", "image2.jpeg", "image3.jpeg", "image4.jpeg", "image5.jpeg", "image6.jpeg"]);
+
+        let avatars: Vec<_> = verify_images.into_iter().map(|i| SelectableAvatar::new(ctx, AvatarContent::Image(i), None, false, 112.0)).collect();
+
+        let images = AvatarSelector::new(avatars);
+        
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(instructions), Box::new(images)]);
+        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
+            UCPFlow::SelectInstitution.navigate(ctx)
+        }));
+        VerifyIdentityImages(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
 
@@ -194,4 +227,12 @@ pub fn my_bank_item(ctx: &mut Context, name: &'static str, url: &'static str, im
         ctx, false, name, None, Some(url), None, None, None, None, Some(avatar), None, 
         move |ctx: &mut Context| {}
     )
+}
+
+pub fn verify_images(ctx: &mut Context, paths: Vec<&'static str>) -> Vec<resources::Image> {
+    paths.into_iter().map(|path| {
+        let bytes = &ctx.load_file(path).unwrap();
+        let img = image::load_from_memory(&bytes).unwrap();
+        ctx.add_image(img.into())
+    }).collect()
 }
