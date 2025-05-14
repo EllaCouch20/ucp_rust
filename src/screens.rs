@@ -59,7 +59,7 @@ impl EnterCredentials {
         let user_id = TextInput::new(ctx, None, Some("User ID"), "User ID...", None, icon_button);
         let password = TextInput::new(ctx, None, Some("Password"), "Password...", None, icon_button);
 
-        let (name, url, image) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, image) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, image);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::SelectInstitution.navigate(ctx));
@@ -84,7 +84,7 @@ impl VerifyIdentityCaptcha {
         let img = image::load_from_memory(&bytes).unwrap();
         let image = Image{shape: ShapeType::Rectangle(0.0, (140.0, 50.0)), image: ctx.add_image(img.into()), color: None};
 
-        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::EnterCredentials.navigate(ctx));
@@ -109,7 +109,7 @@ impl VerifyIdentityColor {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let color = TextInput::new(ctx, None, Some("Your favorite color"), "Please enter your favorite color...", None, icon_button);
 
-        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx));
@@ -135,7 +135,7 @@ impl VerifyIdentityPhoneNumber {
             None, None
         );       
         
-        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityColor.navigate(ctx));
@@ -160,7 +160,7 @@ impl VerifyIdentityToken {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let color = TextInput::new(ctx, None, Some("Enter the token"), "Please enter the token...", None, icon_button);
 
-        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityPhoneNumber.navigate(ctx));
@@ -181,7 +181,7 @@ impl OnEvent for VerifyIdentityImages {}
 impl VerifyIdentityImages {
     pub fn new(ctx: &mut Context) -> Self {
 
-        let (name, url, i) = ctx.get::<UCPPlugin>().my_bank();
+        let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityToken.navigate(ctx));

@@ -11,9 +11,6 @@ use components::*;
 pub struct MyApp;
 
 impl App for MyApp {
-    // async fn background_tasks(ctx: &mut HeadlessContext) -> Tasks {
-    //    // BDKPlugin::background_tasks(ctx).await
-    // }
     async fn plugins(ctx: &mut Context, h_ctx: &mut HeadlessContext) -> (Plugins, Tasks) {
         let (mut pelican, _ptasks) = PelicanUI::new(ctx, h_ctx).await;
         pelican.update_theme(ucp_theme(ctx));
