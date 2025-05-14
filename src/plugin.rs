@@ -4,10 +4,11 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use reqwest::get;
 use image::{load_from_memory, RgbaImage};
+use std::collections::HashMap;
 
 pub struct UCPPlugin {
     banks: Arc<Mutex<BankInstitutions>>,
-    captcha: Arc<Mutex<String>>,
+    captcha: Arc<Mutex<HashMap<&'static str, resources::Image>>>,
     my_bank: Arc<Mutex<Option<(&'static str, &'static str, RgbaImage)>>>,
 }
 
@@ -20,7 +21,7 @@ impl UCPPlugin {
         self.banks.lock().unwrap().0.clone()
     }
 
-    pub fn get_captcha(&mut self) -> String {
+    pub fn captcha_images(&mut self) -> HashMap<&'static str, resources::Image> {
         self.captcha.lock().unwrap().clone()
     }
 
@@ -41,11 +42,13 @@ impl Plugin for UCPPlugin {
         vec![]
     }
 
-    async fn new(_ctx: &mut Context, _h_ctx: &mut HeadlessContext) -> (Self, Tasks) {
+    async fn new(ctx: &mut Context, _h_ctx: &mut HeadlessContext) -> (Self, Tasks) {
+        ctx.include_assets(include_assets!("./assets"));
+
         let test_banks = vec![
-            ("Sophtron Bank", "https://sophtron.com", "https://sophtron.com/Images/logo.png"),
+            ("Sophtron Bank", "https://sophtron.com", "https://docs.sophtron.com/favicon.ico"),
             ("MX Bank", "https://mx.com", "https://content.moneydesktop.com/storage/MD_Assets/Ipad%20Logos/100x100/INS-68e96dd6-eabd-42d3-9f05-416897f0746c_100x100.png"),
-            ("Sophtron Bank", "https://sophtron.com", "https://sophtron.com/Images/logo.png"),
+            ("Sophtron Bank", "https://sophtron.com", "https://docs.sophtron.com/favicon.ico"),
             ("MX Bank", "https://mx.com", "https://content.moneydesktop.com/storage/MD_Assets/Ipad%20Logos/100x100/INS-68e96dd6-eabd-42d3-9f05-416897f0746c_100x100.png"),
         ];
 
@@ -53,17 +56,20 @@ impl Plugin for UCPPlugin {
         
         for (name, link, image) in test_banks.into_iter() {
             let response = get(image).await.expect("Could not get link");
-            println!("RESPONSE {:?}", response);
             let bytes = response.bytes().await.expect("Could not get bytes");
             let img: RgbaImage = load_from_memory(&bytes).expect("Could not load from memory.").into();
             banks.push((name, link, img))
         }
+
         let banks = Arc::new(Mutex::new(BankInstitutions(banks)));
 
-        let captcha = reqwest::get("https://sophtron.com/../serviceClients/sophtronClient/v2")
-                .await.expect("Couldn't get request")
-                .text()
-                .await.expect("Couldn't get text");
+        let mut captcha = HashMap::new();
+        let paths = vec!["image1.jpeg", "image2.jpeg", "image3.jpeg", "image4.jpeg", "image5.jpeg", "image6.jpeg"];
+        paths.into_iter().for_each(|path| {
+            let img = &ctx.load_file(path).unwrap();
+            let img = image::load_from_memory(img).unwrap();
+            captcha.insert(path, ctx.add_image(img.into()));
+        });
 
         let captcha = Arc::new(Mutex::new(captcha));
         let my_bank = Arc::new(Mutex::new(None));

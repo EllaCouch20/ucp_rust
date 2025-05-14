@@ -27,7 +27,6 @@ impl App for MyApp {
     }
 
     async fn new(ctx: &mut Context) -> Box<dyn Drawable> {
-        ctx.include_assets(include_assets!("./assets"));
         let home = SelectInstitution::new(ctx);
         Box::new(Interface::new(ctx, home, None, None))
     }

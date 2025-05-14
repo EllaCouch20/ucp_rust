@@ -9,7 +9,6 @@ use crate::components::*;
 pub enum UCPFlow {
     SelectInstitution,
     EnterCredentials,
-    // ConnectingBank,
     VerifyIdentityCaptcha,
     VerifyIdentityColor,
     VerifyIdentityPhoneNumber,
@@ -22,7 +21,6 @@ impl AppFlow for UCPFlow {
         match self {
             UCPFlow::SelectInstitution => Box::new(SelectInstitution::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::EnterCredentials => Box::new(EnterCredentials::new(ctx)) as Box<dyn AppPage>,
-            // UCPFlow::ConnectingBank => Box::new(ConnectingBank::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityCaptcha => Box::new(VerifyIdentityCaptcha::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityColor => Box::new(VerifyIdentityColor::new(ctx)) as Box<dyn AppPage>,
             UCPFlow::VerifyIdentityPhoneNumber => Box::new(VerifyIdentityPhoneNumber::new(ctx)) as Box<dyn AppPage>,
@@ -40,7 +38,7 @@ impl SelectInstitution {
     pub fn new(ctx: &mut Context) -> Self {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let searchbar = TextInput::new(ctx, None, None, "Search", None, icon_button);
-        let header = Header::home(ctx, "Select institution");
+        let header = Header::stack(ctx, None, "Select your institution", None);
 
         let banks = ctx.get::<UCPPlugin>().get_banks();
 
@@ -125,8 +123,6 @@ impl VerifyIdentityColor {
     }
 }
 
-// Please select a channal to receive your secure code
-
 #[derive(Debug, Component)]
 pub struct VerifyIdentityPhoneNumber(Stack, Page);
 impl AppPage for VerifyIdentityPhoneNumber {}
@@ -191,12 +187,13 @@ impl VerifyIdentityImages {
         let back = IconButton::navigation(ctx, "left", |ctx: &mut Context| UCPFlow::VerifyIdentityToken.navigate(ctx));
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
 
-        let text_size = ctx.get::<PelicanUI>().theme.fonts.size.md;
-        let instructions = Text::new(ctx, "Choose your saved image.", TextStyle::Primary, text_size, Align::Left);
+        let text_size = ctx.get::<PelicanUI>().theme.fonts.size.h5;
+        let instructions = Text::new(ctx, "Choose the image containing a cat.", TextStyle::Heading, text_size, Align::Left);
 
-        let verify_images = verify_images(ctx, vec!["image1.jpeg", "image2.jpeg", "image3.jpeg", "image4.jpeg", "image5.jpeg", "image6.jpeg"]);
+        let verify_images = ctx.get::<UCPPlugin>().captcha_images();
+        println!("Images: {:?}", verify_images);
 
-        let avatars: Vec<_> = verify_images.into_iter().map(|i| SelectableAvatar::new(ctx, AvatarContent::Image(i), None, false, 112.0)).collect();
+        let avatars: Vec<_> = verify_images.into_iter().map(|(_, i)| SelectableAvatar::new(ctx, AvatarContent::Image(i), None, false, 112.0)).collect();
 
         let images = AvatarSelector::new(avatars);
         
@@ -227,12 +224,4 @@ pub fn my_bank_item(ctx: &mut Context, name: &'static str, url: &'static str, im
         ctx, false, name, None, Some(url), None, None, None, None, Some(avatar), None, 
         move |ctx: &mut Context| {}
     )
-}
-
-pub fn verify_images(ctx: &mut Context, paths: Vec<&'static str>) -> Vec<resources::Image> {
-    paths.into_iter().map(|path| {
-        let bytes = &ctx.load_file(path).unwrap();
-        let img = image::load_from_memory(&bytes).unwrap();
-        ctx.add_image(img.into())
-    }).collect()
 }
