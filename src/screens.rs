@@ -38,10 +38,19 @@ impl SelectInstitution {
     pub fn new(ctx: &mut Context) -> Self {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
         let searchbar = TextInput::new(ctx, None, None, "Search", None, icon_button);
-        let header = Header::stack(ctx, None, "Select your institution", None);
+
+        let back = {
+            let on_return = ctx.get::<UCPPlugin>().back();
+            on_return.map(|mut action| {
+                IconButton::navigation(ctx, "left", move |ctx: &mut Context| {
+                    action(ctx)
+                })
+            })
+        };
+
+        let header = Header::stack(ctx, back, "Select your institution", None);
 
         let banks = ctx.get::<UCPPlugin>().get_banks();
-
         let banks = ListItemGroup::new(banks.into_iter().map(|(name, url, image)| bank_item(ctx, name, url, image.clone())).collect());
         
         let content = Content::new(Offset::Start, vec![Box::new(searchbar), Box::new(banks)]);
@@ -66,7 +75,8 @@ impl EnterCredentials {
         let header = Header::stack(ctx, Some(back), "Enter credentials", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(user_id), Box::new(password)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx)));
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityCaptcha.navigate(ctx));
+        let bumper = Bumper::single_button(ctx, button);
         EnterCredentials(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
@@ -91,11 +101,8 @@ impl VerifyIdentityCaptcha {
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(image), Box::new(captcha)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::VerifyIdentityColor.navigate(ctx)
-            // let request = ctx.get::<UCPPlugin>().get_captcha();
-            // println!("body = {:?}", request);
-        }));
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityColor.navigate(ctx));
+        let bumper = Bumper::single_button(ctx, button);
         VerifyIdentityCaptcha(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
@@ -116,9 +123,8 @@ impl VerifyIdentityColor {
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(color)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::VerifyIdentityPhoneNumber.navigate(ctx)
-        }));
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityPhoneNumber.navigate(ctx));
+        let bumper = Bumper::single_button(ctx, button);
         VerifyIdentityColor(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
@@ -142,11 +148,8 @@ impl VerifyIdentityPhoneNumber {
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(selector)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::VerifyIdentityToken.navigate(ctx)
-            // let request = ctx.get::<UCPPlugin>().get_captcha();
-            // println!("body = {:?}", request);
-        }));
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityToken.navigate(ctx));
+        let bumper = Bumper::single_button(ctx, button);
         VerifyIdentityPhoneNumber(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
@@ -167,9 +170,8 @@ impl VerifyIdentityToken {
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(color)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::VerifyIdentityImages.navigate(ctx)
-        }));
+        let button = Button::primary(ctx, "Continue", |ctx: &mut Context| UCPFlow::VerifyIdentityImages.navigate(ctx));
+        let bumper = Bumper::single_button(ctx, button);
         VerifyIdentityToken(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }
@@ -180,7 +182,7 @@ impl AppPage for VerifyIdentityImages {}
 impl OnEvent for VerifyIdentityImages {}
 impl VerifyIdentityImages {
     pub fn new(ctx: &mut Context) -> Self {
-
+        // let cache = &ctx.get::<UCPPlugin>();
         let (name, url, i) = ctx.get::<UCPPlugin>().get_bank();
         let my_bank = my_bank_item(ctx, name, url, i);
 
@@ -198,9 +200,14 @@ impl VerifyIdentityImages {
         let images = AvatarSelector::new(avatars);
         
         let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(instructions), Box::new(images)]);
-        let bumper = Bumper::single_button(Button::primary(ctx, "Continue", |ctx: &mut Context|{
-            UCPFlow::SelectInstitution.navigate(ctx)
-        }));
+        let button = Button::primary(ctx, "Continue", move |ctx: &mut Context| {
+            let mut on_return = ctx.get::<UCPPlugin>().on_return();
+            match &mut on_return {
+                Some(action) => (action)(ctx),
+                None => UCPFlow::SelectInstitution.navigate(ctx)
+            }
+        });
+        let bumper = Bumper::single_button(ctx, button);
         VerifyIdentityImages(Stack::center(), Page::new(header, content, Some(bumper), false))
     }
 }

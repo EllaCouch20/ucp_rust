@@ -1,12 +1,12 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
 
-mod screens;
-use screens::*;
-mod plugin;
-use plugin::*;
-mod components; 
-use components::*;
+pub mod screens;
+pub use screens::*;
+pub mod plugin;
+pub use plugin::*;
+pub mod components; 
+pub use components::*;
 
 pub struct MyApp;
 
