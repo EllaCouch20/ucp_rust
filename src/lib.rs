@@ -25,7 +25,7 @@ impl App for MyApp {
 
     async fn new(ctx: &mut Context) -> Box<dyn Drawable> {
         let home = SelectInstitution::new(ctx);
-        Box::new(Interface::new(ctx, home, None, None))
+        Box::new(Interface::new(ctx, home, None, None, None))
     }
 }
 
