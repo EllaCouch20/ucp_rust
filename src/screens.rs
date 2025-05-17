@@ -1,7 +1,7 @@
 use rust_on_rails::prelude::*;
 use pelican_ui::prelude::*;
 use pelican_ui::prelude::Text;
-use image::{load_from_memory, RgbaImage};
+use image::RgbaImage;
 use crate::UCPPlugin;
 use crate::components::*;
 
@@ -229,6 +229,6 @@ pub fn my_bank_item(ctx: &mut Context, name: &'static str, url: &'static str, im
     let avatar = AvatarContent::Image(img);
     ListItem::new(
         ctx, false, name, None, Some(url), None, None, None, None, Some(avatar), None, 
-        move |ctx: &mut Context| {}
+        move |_ctx: &mut Context| {}
     )
 }

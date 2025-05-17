@@ -1,9 +1,5 @@
 use rust_on_rails::prelude::*;
-use pelican_ui::AppFlow;
-// use pelican_ui::prelude::Text;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use reqwest::get;
 use image::{load_from_memory, RgbaImage};
 use std::collections::HashMap;
 

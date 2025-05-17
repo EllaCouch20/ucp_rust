@@ -38,7 +38,7 @@ impl SelectableAvatar {
         ctx: &mut Context, 
         content: AvatarContent, 
         flair: Option<(&'static str, AvatarIconStyle)>, 
-        mut outline: bool, 
+        outline: bool, 
         size: f32,
     ) -> Self {
         let id = ElementID::new();
