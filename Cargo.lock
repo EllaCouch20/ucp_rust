@@ -2067,7 +2067,9 @@ dependencies = [
 
 [[package]]
 name = "maverick_os"
-version = "0.1.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7870cb0ced9feac3c8e37e6b1262f2291b5a5328f587e5f0aeda43da830fcc8b"
 dependencies = [
  "air",
  "async-trait",
@@ -2943,6 +2945,8 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "pelican_macro"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0adada1c230e529a3c534e951fdc904869ad9a3c3e6b02e1e01f5fcdedbf4ac8"
 dependencies = [
  "proc-macro2 1.0.95",
  "quote 1.0.40",
@@ -2951,7 +2955,9 @@ dependencies = [
 
 [[package]]
 name = "pelican_ui"
-version = "0.1.0"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c287cea1c18b7711fa19646cd7e79e01eb3f0139a613bd35ee378ea0f8daa04e"
 dependencies = [
  "downcast-rs 2.0.1",
  "image 0.25.6",
@@ -2976,7 +2982,9 @@ dependencies = [
 
 [[package]]
 name = "pelican_ui_std"
-version = "1.0.6"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28fe3a8fa2a2125b9f61e4abb06478691b929fd83911819c0e07ce20a6083e3b"
 dependencies = [
  "chrono",
  "downcast-rs 2.0.1",
@@ -3264,6 +3272,8 @@ checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 [[package]]
 name = "ramp-glyphon"
 version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84ddf6e005bc6b61af0a2823719454ac64ce8712a3057bf6580a550d3f185303"
 dependencies = [
  "etagere",
  "lru",
@@ -4994,7 +5004,9 @@ dependencies = [
 
 [[package]]
 name = "wgpu_canvas"
-version = "4.0.1"
+version = "4.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5874e27df14cb7662c2ce0395ce619071b397046780128374821a965b32386f"
 dependencies = [
  "bytemuck",
  "fast_image_resize",
