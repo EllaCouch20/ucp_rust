@@ -1,5 +1,11 @@
-use rust_on_rails::prelude::*;
-use pelican_ui::prelude::*;
+use pelican_ui::{include_assets, Context, Assets, Plugins, Plugin, Service, Services, ServiceList, maverick_start, start, Application, PelicanEngine, MaverickOS, HardwareContext, ColorResources, FontResources, BrandResources, IconResources, Theme};
+use pelican_ui::drawable::{Drawable, Color};
+use pelican_ui_std::{AvatarIconStyle, AvatarContent, Interface, NavigateEvent};
+use pelican_ui::theme::{ButtonColorScheme, TextColor, BrandColor, StatusColor, ButtonColors, ShadesColor, BackgroundColor, OutlineColor};
+use std::any::TypeId;
+use std::collections::BTreeMap;
+use std::pin::Pin;
+use std::future::Future;
 
 pub mod screens;
 pub use screens::*;
@@ -8,30 +14,37 @@ pub use plugin::*;
 pub mod components; 
 pub use components::*;
 
+// fn service<'a>(ctx: &'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a >> {
+//     Box::pin(async move {Box::new(ProfileService::new(ctx).await) as Box<dyn Service>})
+// }
+
 pub struct MyApp;
-
-impl App for MyApp {
-    async fn plugins(ctx: &mut Context, h_ctx: &mut HeadlessContext) -> (Plugins, Tasks) {
-        let (mut pelican, _ptasks) = PelicanUI::new(ctx, h_ctx).await;
-        pelican.update_theme(ucp_theme(ctx));
-
-        let (ucp, tasks) = UCPPlugin::new(ctx, h_ctx).await;
-
-        (std::collections::HashMap::from([
-            (std::any::TypeId::of::<PelicanUI>(), Box::new(pelican) as Box<dyn std::any::Any>),
-            (std::any::TypeId::of::<UCPPlugin>(), Box::new(ucp) as Box<dyn std::any::Any>)
-        ]), tasks)
-    }
-
-    async fn new(ctx: &mut Context) -> Box<dyn Drawable> {
-        let home = SelectInstitution::new(ctx);
-        Box::new(Interface::new(ctx, home, None, None, None))
+impl Services for MyApp {
+    fn services() -> ServiceList {
+        BTreeMap::new()
     }
 }
 
-create_entry_points!(MyApp);
+impl Plugins for MyApp {
+    fn plugins(ctx: &mut Context) -> Vec<Box<dyn Plugin>> {
+        vec![]
+    }
+}
 
-fn ucp_theme(ctx: &mut Context) -> Theme {
+impl Application for MyApp {
+
+    async fn new(ctx: &mut Context) -> Box<dyn Drawable> {
+        ctx.assets.include_assets(include_assets!("./assets"));
+        let new_theme = ucp_theme(&mut ctx.assets);
+        ctx.theme = new_theme;
+        let home = SelectInstitution::new(ctx).0;
+        Box::new(Interface::new(ctx, home, None))
+    }
+}
+
+start!(MyApp);
+
+fn ucp_theme(assets: &mut Assets) -> Theme {
     Theme::new(
         ColorResources::new(
             BackgroundColor {
@@ -133,8 +146,8 @@ fn ucp_theme(ctx: &mut Context) -> Theme {
                 },
             }
         ),
-        FontResources::default(ctx),
-        IconResources::default(ctx),
-        BrandResources::default(ctx)
+        FontResources::default(assets),
+        IconResources::default(assets),
+        BrandResources::default(assets)
     )
 }
