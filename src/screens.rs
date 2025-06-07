@@ -18,7 +18,9 @@ use pelican_ui_std::{
     Timestamp, ListItemGroup,
 };
 
-use crate::{AvatarSelector, SelectableAvatar, BankInstitutions, ListItemUCP, MyBank};
+use crate::{AvatarSelector, SelectableAvatar, BankInstitutions, ListItemUCP, MyBank, APIService, service::Responses};
+
+use reqwest::blocking::get;
 
 #[derive(Debug, Component, AppPage)]
 pub struct SelectInstitution(Stack, Page);
@@ -78,16 +80,15 @@ impl EnterCredentials {
 }
 
 #[derive(Debug, Component, AppPage)]
-pub struct VerifyIdentityCaptcha(Stack, Page);
-impl OnEvent for VerifyIdentityCaptcha {}
+pub struct VerifyIdentityCaptcha(Stack, Page, #[skip] bool, #[skip] String);
+
 impl VerifyIdentityCaptcha {
     pub fn new(ctx: &mut Context) -> (Self, bool) {
         let icon_button = None::<(&'static str, fn(&mut Context, &mut String))>;
-        let captcha = TextInput::new(ctx, None, Some("Captcha code"), "Please enter the Captcha code...", None, icon_button);
+        let instructions = TextInput::new(ctx, None, Some("Captcha code"), "Please enter the Captcha code...", None, icon_button);
 
-        let bytes = &ctx.assets.load_file("captcha.png").unwrap();
-        let img = image::load_from_memory(&bytes).unwrap();
-        let image = Image{shape: ShapeType::Rectangle(0.0, (140.0, 50.0)), image: ctx.assets.add_image(img.into()), color: None};
+        let url = "https://storage.googleapis.com/kagglesdsdata/datasets/38019/306654/samples/243mm.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=databundle-worker-v2%40kaggle-161607.iam.gserviceaccount.com%2F20250605%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250605T223125Z&X-Goog-Expires=345600&X-Goog-SignedHeaders=host&X-Goog-Signature=73bf6dc44c188c6ab146f3c5c7f2505a446f6411451492adc1e7dd633a6adc41fc65d295643bcf8b6828d3865dbc0a9eda500817e0d7fed63b9dd8a68e1e4057bb6fce0e56054851860edcd3cf027383181379eb902f3885bcf61bd7bfdc333dcb04dcfaa6a7d9378f5caccd53ff161bce40347fe60a2ab664a8b3bd482f94865f13464b138bbc2c3d76742a5fc9609373967926d9dbaa5d5d955cb855bcccf1b9f9161abd4011c2c94868be175b9e5d429a52d744fea24bcfcd7ad2b34c41b80e2d89bc7857fcb345b9800ca4771505e0ce0ecf043fb28f3b83438261fb881e382e3c23b9ce2b4db96462189276767333211853639ab6dfa8b8246fc4cf79ee".to_string();
+        ctx.runtime.send::<APIService>(url.clone());
 
         let my_bank = ctx.state().get::<MyBank>().0;
         let my_bank = ListItemUCP::my_bank_item(ctx, my_bank.0, my_bank.1, my_bank.2);
@@ -103,9 +104,30 @@ impl VerifyIdentityCaptcha {
         });
 
         let header = Header::stack(ctx, Some(back), "Verify identity", None);
-        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(image), Box::new(captcha)]);
+
+        // Display the image as the second item in the content
+        let content = Content::new(Offset::Start, vec![Box::new(my_bank), Box::new(instructions)]);
         let bumper = Bumper::single_button(ctx, button);
-        (VerifyIdentityCaptcha(Stack::center(), Page::new(header, content, Some(bumper))), false)
+
+        // Returning the page containing our content (and header, and bumper)
+        (VerifyIdentityCaptcha(Stack::center(), Page::new(header, content, Some(bumper)), false, url), false)
+    }
+}
+
+impl OnEvent for VerifyIdentityCaptcha {
+    fn on_event(&mut self, ctx: &mut Context, event: &mut dyn Event) -> bool {
+        if let Some(TickEvent) = event.downcast_ref::<TickEvent>() {
+            if !self.2 {
+                let responses = ctx.state().get::<Responses>().0;
+                if let Some(bytes) = responses.get(&self.3) {
+                    self.2 = true;
+                    let loaded_image = image::load_from_memory(&bytes).expect("Error: Could not load image from memory");
+                    let image = Image{shape: ShapeType::Rectangle(0.0, (140.0, 50.0)), image: ctx.assets.add_image(loaded_image.into()), color: None};
+                    self.1.content().items().insert(1, Box::new(image));
+                }
+            }
+        }
+        true
     }
 }
 

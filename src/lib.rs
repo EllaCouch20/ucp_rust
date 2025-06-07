@@ -6,6 +6,7 @@ use std::any::TypeId;
 use std::collections::BTreeMap;
 use std::pin::Pin;
 use std::future::Future;
+use std::fs::DirEntry;
 
 pub mod screens;
 pub use screens::*;
@@ -14,14 +15,26 @@ pub use plugin::*;
 pub mod components; 
 pub use components::*;
 
+mod service;
+use service::APIService;
+
+
 // fn service<'a>(ctx: &'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a >> {
-//     Box::pin(async move {Box::new(ProfileService::new(ctx).await) as Box<dyn Service>})
+//     Box::pin(async move {Box::new(APIService::new(ctx).await) as Box<dyn Service>})
 // }
+
+
+fn service<'a>(ctx: &'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a >> {
+    Box::pin(async move {Box::new(APIService::new(ctx).await) as Box<dyn Service>})
+}
 
 pub struct MyApp;
 impl Services for MyApp {
     fn services() -> ServiceList {
-        BTreeMap::new()
+        BTreeMap::from([(
+            TypeId::of::<APIService>(), 
+            Box::new(service) as Box<dyn for<'a> FnOnce(&'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a>>>
+        )])
     }
 }
 

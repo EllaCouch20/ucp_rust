@@ -4425,10 +4425,13 @@ version = "0.1.0"
 dependencies = [
  "image 0.25.6",
  "include_dir",
+ "log",
+ "maverick_os",
  "pelican_ui",
  "pelican_ui_std",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
 ]
 
