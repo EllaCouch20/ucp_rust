@@ -1,4 +1,4 @@
-use pelican_ui::{include_assets, Context, Assets, Plugins, Plugin, Service, Services, ServiceList, maverick_start, start, Application, PelicanEngine, MaverickOS, HardwareContext, ColorResources, FontResources, BrandResources, IconResources, Theme};
+use pelican_ui::{include_assets, Context, Assets, Plugins, Plugin, maverick_start, start, Application, PelicanEngine, MaverickOS, HardwareContext, ColorResources, FontResources, BrandResources, IconResources, Theme};
 use pelican_ui::drawable::{Drawable, Color};
 use pelican_ui_std::{AvatarIconStyle, AvatarContent, Interface, NavigateEvent};
 use pelican_ui::theme::{ButtonColorScheme, TextColor, BrandColor, StatusColor, ButtonColors, ShadesColor, BackgroundColor, OutlineColor};
@@ -15,28 +15,15 @@ pub use plugin::*;
 pub mod components; 
 pub use components::*;
 
-mod service;
-use service::APIService;
-
-
-// fn service<'a>(ctx: &'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a >> {
-//     Box::pin(async move {Box::new(APIService::new(ctx).await) as Box<dyn Service>})
-// }
-
-
-fn service<'a>(ctx: &'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a >> {
-    Box::pin(async move {Box::new(APIService::new(ctx).await) as Box<dyn Service>})
-}
-
 pub struct MyApp;
-impl Services for MyApp {
-    fn services() -> ServiceList {
-        BTreeMap::from([(
-            TypeId::of::<APIService>(), 
-            Box::new(service) as Box<dyn for<'a> FnOnce(&'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a>>>
-        )])
-    }
-}
+//  impl Services for MyApp {
+//      fn services() -> ServiceList {
+//          BTreeMap::from([(
+//              TypeId::of::<APIService>(), 
+//              Box::new(service) as Box<dyn for<'a> FnOnce(&'a mut HardwareContext) -> Pin<Box<dyn Future<Output = Box<dyn Service>> + 'a>>>
+//          )])
+//      }
+//  }
 
 impl Plugins for MyApp {
     fn plugins(ctx: &mut Context) -> Vec<Box<dyn Plugin>> {
