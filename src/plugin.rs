@@ -64,14 +64,14 @@ impl BankInstitutions {
         let banks = vec![
             ("Sophtron Bank", "https://sophtron.com", "sophtron.png"),
             ("MX Bank", "https://mx.com", "mx.png"),
-            ("Wells Fargo", "https://wellsfargo.com", "wellsfargo.png"),
-            ("Huntington Bank", "https://huntington.com", "huntington.png"),
-            ("Ally", "https://ally.com", "ally.png"),
-            ("American Express", "https://amex.com", "amex.png"),
-            ("USAA", "https://usaa.com", "usaa.png"),
-            ("Fidelity", "https://fidelity.com", "fidelity.png"),
-            ("Discover", "https://discover.com", "discover.png"),
-            ("Captial One", "https://captialone.com", "capital.png"),
+          //("Wells Fargo", "https://wellsfargo.com", "wellsfargo.png"),
+          //("Huntington Bank", "https://huntington.com", "huntington.png"),
+          //("Ally", "https://ally.com", "ally.png"),
+          //("American Express", "https://amex.com", "amex.png"),
+          //("USAA", "https://usaa.com", "usaa.png"),
+          //("Fidelity", "https://fidelity.com", "fidelity.png"),
+          //("Discover", "https://discover.com", "discover.png"),
+          //("Captial One", "https://captialone.com", "capital.png"),
         ];
 
         let all_banks = banks.into_iter().map(|(n, l, i)| Bank(n.to_string(), l.to_string(), i.to_string())).collect::<Vec<Bank>>();
