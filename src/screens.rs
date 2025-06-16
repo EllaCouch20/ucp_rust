@@ -97,7 +97,7 @@ impl VerifyIdentityCaptcha {
         let instructions = TextInput::new(ctx, None, Some("Captcha code"), "Please enter the Captcha code...", None, icon_button);
 
         //Url for our captcha image
-        let url = "https://storage.googleapis.com/kagglesdsdata/datasets/38019/306654/samples/226md.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=databundle-worker-v2%40kaggle-161607.iam.gserviceaccount.com%2F20250609%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250609T224527Z&X-Goog-Expires=345600&X-Goog-SignedHeaders=host&X-Goog-Signature=b7af30f75d30add7956c57a947621aa2e929c3ca822703f1704600cef0d89cf6407e12b711d27caee9e406a29c1e1c2b4d903847fdc7bc1d3fb32245a0e1e000eb732c2758367114aa6112324fa914ab47a3ab22a17e58fb20985c3c173a6e2f49a167193e325881c64a90024e1e63f362c4f799be95ea6e801235a34d5990c9040bac2400723228fe5029e48b333fcd8e03643a01f088f67b46a88795799ce33ac4524dde524b54209caeaed6735d12d42840334902565e19265e5e9bd0397102cecbf3b89d6fec076add6627c7f4a4989a95f0af43b2b5687022e466eae373f7fa778c179abdf141942ca8d41bb43db807f151f66ab9d01e4d34056a375ea0".to_string();
+        let url = "https://www.pandasecurity.com/en/mediacenter/src/uploads/2014/09/avoid-captcha.jpg".to_string();
         //Spawn an async task 
         ctx.runtime.spawn((
             //This async task runs once and calls the callback function at the bottom with the
